@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"  
+	xmlns:jee="http://www.springframework.org/schema/jee" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+	<!-- 读取JDBC -->
+<bean id="yl"  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="locations"  >
+      	<list>
+              <value>classpath:mysqljdbc.properties</value>
+              <value>classpath:oraclejdbc.properties </value>
+           </list>
+       </property>
+</bean>
+	
+	
+		<!-- 配置数据库连接参数及连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${mysqljdbc.driver}" />
+		<property name="url" value="${mysqljdbc.url}" />
+		<property name="username" value="${mysqljdbc.username}" />
+		<property name="password" value="${mysqljdbc.password}" />
+		<!-- 初始化连接大小 -->
+		<property name="initialSize" value="${mysqljdbc.initialSize}"></property>
+		<!-- 连接池最大数量 -->
+		<property name="maxActive" value="${mysqljdbc.maxActive}"></property>
+		<!-- 连接池最大空闲 -->
+		<property name="maxIdle" value="${mysqljdbc.maxIdle}"></property>
+		<!-- 连接池最小空闲 -->
+		<property name="minIdle" value="${mysqljdbc.minIdle}"></property>
+		<!-- 获取连接最大等待时间 -->
+		<property name="maxWait" value="${mysqljdbc.maxWait}"></property>
+	</bean>
+	<!-- 配置SqlSessionFactory -->
+	<bean id="ssf" 
+	class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 打印输出信息 -->
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<!-- 自动扫描mapping.xml文件 -->
+		<property name="mapperLocations" value="classpath:mapper/mysql/*.xml"></property>
+	</bean>
+	<!-- 配置mapper扫描 -->
+	<bean id="mapperScanner"
+	class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	<property name="basePackage" value="com.java.dao.mysql"></property>
+	<property name="sqlSessionFactoryBeanName" value="ssf"></property>
+	</bean>
+	
+		<!-- Sping事务管理 -->
+		<!-- 定义事务管理Bean -->
+		<bean id="txManager"
+		      class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource">
+		</property>
+		</bean>
+		<!-- 开启@Transactional标记,将标记作用在具体方法上 -->
+		<tx:annotation-driven 
+			transaction-manager="txManager"/>
+	
+	
+		<!-- 配置拦截器 -->
+	<!-- 
+		如果有多个拦截器，会按照配置的
+		先后顺序来执行。
+	 -->
+	<!-- <mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<mvc:exclude-mapping path="/login.do"/>
+			<mvc:exclude-mapping path="/toindex.do"/>
+			<bean class="yl.interceptors.SomeInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors> -->
+</beans>
